@@ -134,6 +134,7 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/reportes', require('./routes/dashboard'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/equipos', require('./routes/equipoRoutes'));
+app.use('/api/contabilidad', require('./routes/contabilidad'));
 
 // ==========================================
 // SERVIR FRONTEND (React build)
