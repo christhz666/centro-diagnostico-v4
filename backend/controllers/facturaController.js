@@ -98,7 +98,7 @@ exports.createFactura = async (req, res, next) => {
             nombre: `${paciente.nombre} ${paciente.apellido}`,
             cedula: paciente.cedula,
             direccion: paciente.direccion ? 
-                `${paciente.direccion.calle || ''}, ${paciente.direccion.sector || ''}` : '',
+                [paciente.direccion.calle, paciente.direccion.sector].filter(Boolean).join(', ') : '',
             telefono: paciente.telefono,
             email: paciente.email
         };
@@ -277,7 +277,7 @@ exports.crearDesdeOrden = async (req, res, next) => {
                 nombre: `${paciente.nombre} ${paciente.apellido}`,
                 cedula: paciente.cedula,
                 direccion: paciente.direccion ?
-                    `${paciente.direccion.calle || ''}, ${paciente.direccion.sector || ''}` : '',
+                    [paciente.direccion.calle, paciente.direccion.sector].filter(Boolean).join(', ') : '',
                 telefono: paciente.telefono,
                 email: paciente.email
             },
@@ -324,6 +324,14 @@ exports.pagarFactura = async (req, res, next) => {
     try {
         const { monto, metodo_pago } = req.body;
 
+        const montoPago = parseFloat(monto);
+        if (isNaN(montoPago) || montoPago <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'El monto debe ser un número positivo'
+            });
+        }
+
         const factura = await Factura.findById(req.params.id);
         if (!factura) {
             return res.status(404).json({
@@ -332,7 +340,6 @@ exports.pagarFactura = async (req, res, next) => {
             });
         }
 
-        const montoPago = parseFloat(monto) || 0;
         factura.montoPagado = (factura.montoPagado || 0) + montoPago;
         factura.metodoPago = metodo_pago || factura.metodoPago;
 

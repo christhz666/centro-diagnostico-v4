@@ -536,7 +536,9 @@ class EquipoService extends EventEmitter {
         estudio = await Estudio.findOne();
       }
 
-      // Create auto cita if none found
+      // Auto-create appointment when equipment sends results without an existing
+      // order/cita. This ensures results from automated analyzers are always linked
+      // to a cita, which is required by the Resultado model schema.
       if (!cita && estudio) {
         const ahora = new Date();
         cita = await Cita.create({
