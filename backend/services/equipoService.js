@@ -365,7 +365,7 @@ class EquipoService extends EventEmitter {
         for (const archivo of archivos) {
           if (procesados.has(archivo)) continue;
           // Simple pattern matching
-          const ext = patron.replace('*', '');
+          const ext = patron.replaceAll('*', '');
           if (ext && !archivo.endsWith(ext)) continue;
 
           const rutaCompleta = path.join(rutaArchivos, archivo);
