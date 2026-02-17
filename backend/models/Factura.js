@@ -58,6 +58,12 @@ const facturaSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
+    anuladoPor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    motivoAnulacion: String,
+    fechaAnulacion: Date,
     notas: String
 }, {
     timestamps: true

@@ -126,10 +126,12 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/pacientes', require('./routes/pacientes'));
 app.use('/api/citas', require('./routes/citas'));
+app.use('/api/ordenes', require('./routes/citas'));
 app.use('/api/estudios', require('./routes/estudios'));
 app.use('/api/resultados', require('./routes/resultados'));
 app.use('/api/facturas', require('./routes/facturas'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/reportes', require('./routes/dashboard'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/equipos', require('./routes/equipoRoutes'));
 

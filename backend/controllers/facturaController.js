@@ -1,6 +1,7 @@
 const Factura = require('../models/Factura');
 const Cita = require('../models/Cita');
 const Paciente = require('../models/Paciente');
+const Estudio = require('../models/Estudio');
 
 // @desc    Obtener facturas
 // @route   GET /api/facturas
@@ -219,6 +220,133 @@ exports.getResumen = async (req, res, next) => {
                 hoy: resumenHoy[0] || { total: 0, cantidad: 0 },
                 porMetodoPago: porMetodo
             }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Crear factura desde orden/cita
+// @route   POST /api/facturas/crear-desde-orden/:ordenId
+exports.crearDesdeOrden = async (req, res, next) => {
+    try {
+        const cita = await Cita.findById(req.params.ordenId)
+            .populate('paciente')
+            .populate('estudios.estudio', 'nombre codigo precio');
+
+        if (!cita) {
+            return res.status(404).json({
+                success: false,
+                message: 'Orden/Cita no encontrada'
+            });
+        }
+
+        const paciente = cita.paciente;
+        if (!paciente) {
+            return res.status(404).json({
+                success: false,
+                message: 'Paciente no encontrado en la orden'
+            });
+        }
+
+        // Build invoice items from the order's studies
+        const items = (cita.estudios || []).map(e => {
+            const estudio = e.estudio;
+            const precio = e.precio || (estudio && estudio.precio) || 0;
+            const descuento = e.descuento || 0;
+            return {
+                descripcion: estudio ? estudio.nombre : 'Estudio',
+                estudio: estudio ? estudio._id : undefined,
+                cantidad: 1,
+                precioUnitario: precio,
+                descuento: descuento,
+                subtotal: precio - descuento
+            };
+        });
+
+        const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+        const descuentoGlobal = req.body.descuento_global || 0;
+        const incluirItbis = req.body.incluir_itbis || false;
+        const itbis = incluirItbis ? subtotal * 0.18 : 0;
+        const total = subtotal - descuentoGlobal + itbis;
+
+        const facturaData = {
+            paciente: paciente._id,
+            cita: cita._id,
+            datosCliente: {
+                nombre: `${paciente.nombre} ${paciente.apellido}`,
+                cedula: paciente.cedula,
+                direccion: paciente.direccion ?
+                    `${paciente.direccion.calle || ''}, ${paciente.direccion.sector || ''}` : '',
+                telefono: paciente.telefono,
+                email: paciente.email
+            },
+            items,
+            subtotal,
+            descuento: descuentoGlobal,
+            itbis,
+            total,
+            metodoPago: req.body.forma_pago || 'efectivo',
+            tipo: req.body.tipo_comprobante === 'B01' ? 'fiscal' : 'consumidor_final',
+            estado: 'emitida',
+            creadoPor: req.user._id
+        };
+
+        const factura = await Factura.create(facturaData);
+
+        // Mark the order as paid
+        await Cita.findByIdAndUpdate(cita._id, {
+            pagado: true,
+            metodoPago: facturaData.metodoPago
+        });
+
+        await factura.populate('paciente', 'nombre apellido cedula');
+
+        res.status(201).json({
+            success: true,
+            message: `Factura ${factura.numero} creada desde orden`,
+            factura: {
+                id: factura._id,
+                numero: factura.numero,
+                total: factura.total,
+                estado: factura.estado
+            },
+            data: factura
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Registrar pago en factura
+// @route   POST /api/facturas/:id/pagar
+exports.pagarFactura = async (req, res, next) => {
+    try {
+        const { monto, metodo_pago } = req.body;
+
+        const factura = await Factura.findById(req.params.id);
+        if (!factura) {
+            return res.status(404).json({
+                success: false,
+                message: 'Factura no encontrada'
+            });
+        }
+
+        const montoPago = parseFloat(monto) || 0;
+        factura.montoPagado = (factura.montoPagado || 0) + montoPago;
+        factura.metodoPago = metodo_pago || factura.metodoPago;
+
+        if (factura.montoPagado >= factura.total) {
+            factura.pagado = true;
+            factura.estado = 'pagada';
+        }
+
+        await factura.save();
+
+        res.json({
+            success: true,
+            message: 'Pago registrado exitosamente',
+            data: factura
         });
     } catch (error) {
         next(error);

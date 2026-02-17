@@ -19,10 +19,6 @@ const validate = (req, res, next) => {
 
 // Validaciones para Login
 const loginValidation = [
-    body('email')
-        .notEmpty().withMessage('El email es requerido')
-        .isEmail().withMessage('Email inválido')
-        .normalizeEmail(),
     body('password')
         .notEmpty().withMessage('La contraseña es requerida')
         .isLength({ min: 6 }).withMessage('Mínimo 6 caracteres'),
