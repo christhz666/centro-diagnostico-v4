@@ -5,12 +5,25 @@ from datetime import timedelta
 
 auth_bp = Blueprint('auth', __name__)
 
-# Usuarios hardcodeados para pruebas (luego será BD)
+# Usuarios para pruebas (usando credenciales estándar del proyecto)
 USERS = {
     'admin': {
         'password': 'admin123',
         'nombre': 'Administrador',
-        'email': 'admin@centro.com'
+        'email': 'admin@centrodiagnostico.com',
+        'rol': 'admin'
+    },
+    'doctor': {
+        'password': 'doctor123',
+        'nombre': 'Doctor',
+        'email': 'doctor@centrodiagnostico.com',
+        'rol': 'medico'
+    },
+    'laboratorio': {
+        'password': 'lab123',
+        'nombre': 'Laboratorista',
+        'email': 'lab@centrodiagnostico.com',
+        'rol': 'laboratorio'
     }
 }
 
@@ -41,7 +54,8 @@ def login():
         'usuario': {
             'username': data['username'],
             'nombre': user['nombre'],
-            'email': user['email']
+            'email': user['email'],
+            'rol': user['rol']
         }
     }), 200
 
@@ -62,3 +76,20 @@ def refresh():
 def logout():
     """Logout endpoint"""
     return jsonify({'message': 'Logged out successfully'}), 200
+
+@auth_bp.route('/me', methods=['GET'])
+@jwt_required()
+def me():
+    """Get current user info"""
+    identity = get_jwt_identity()
+    user = USERS.get(identity)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    return jsonify({
+        'username': identity,
+        'nombre': user['nombre'],
+        'email': user['email'],
+        'rol': user['rol']
+    }), 200
