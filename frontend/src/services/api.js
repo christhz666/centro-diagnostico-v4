@@ -140,6 +140,10 @@ class ApiService {
     async getFactura(id) { return this.request('/facturas/' + id); }
 
     async createFactura(data) {
+        // If items are already provided, use direct invoice creation
+        if (data.items && data.items.length > 0) {
+            return this.request('/facturas', { method: 'POST', body: JSON.stringify(data) });
+        }
         if (data.cita || data.orden_id) {
             const ordenId = data.cita || data.orden_id;
             // 1. Crear factura desde orden
@@ -223,6 +227,24 @@ class ApiService {
     async getMedicos() { return this.request('/admin/medicos'); }
     async getRoles() { return this.request('/admin/roles'); }
     async healthCheck() { return this.request('/health'); }
+
+    // Contabilidad
+    async getMovimientosContables(params = {}) {
+        const query = new URLSearchParams(params).toString();
+        return this.request('/contabilidad?' + query);
+    }
+    async createMovimientoContable(data) {
+        return this.request('/contabilidad', { method: 'POST', body: JSON.stringify(data) });
+    }
+    async getResumenContable() {
+        return this.request('/contabilidad/resumen');
+    }
+    async getFlujoCaja() {
+        return this.request('/contabilidad/flujo-caja');
+    }
+    async deleteMovimientoContable(id) {
+        return this.request('/contabilidad/' + id, { method: 'DELETE' });
+    }
 }
 
 const api = new ApiService();

@@ -19,6 +19,7 @@ import GestionEstudios from './components/GestionEstudios';
 import Resultados from './components/Resultados';
 import ConsultaRapida from './components/ConsultaRapida';
 import AdminEquipos from './components/AdminEquipos';
+import Contabilidad from './components/Contabilidad';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -85,6 +86,7 @@ function App() {
     { path: '/admin/usuarios', icon: <FaUsers />, label: 'Usuarios', roles: ['admin'] },
     { path: '/admin/equipos', icon: <FaCogs />, label: 'Equipos', roles: ['admin'] },
     { path: '/admin/estudios', icon: <FaClipboardList />, label: 'Catálogo Estudios', roles: ['admin'] },
+    { path: '/contabilidad', icon: <FaChartPie />, label: 'Contabilidad', roles: ['admin'] },
   ];
 
   const filteredMenu = menuItems.filter(item => item.roles.includes(user.rol));
@@ -215,6 +217,7 @@ function App() {
               <Route path="/admin/usuarios" element={<AdminUsuarios />} />
               <Route path="/admin/equipos" element={<AdminEquipos />} />
               <Route path="/admin/estudios" element={<GestionEstudios />} />
+              <Route path="/contabilidad" element={<Contabilidad />} />
               <Route path="/resultados" element={<Resultados />} />
               <Route path="/login" element={<Navigate to="/" />} />
               <Route path="*" element={<Navigate to="/" />} />

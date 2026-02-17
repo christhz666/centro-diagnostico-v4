@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaUserCog, FaNotesMedical, FaChartPie, FaEdit, FaTrash, FaCheck, FaBan, FaKey } from 'react-icons/fa';
 
-export default AdminPanel;
-
 
 const API = '/api';
 

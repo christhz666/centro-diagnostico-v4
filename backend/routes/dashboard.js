@@ -6,6 +6,7 @@ const { protect, authorize } = require('../middleware/auth');
 router.use(protect);
 
 router.get('/stats', getStats);
+router.get('/dashboard', getStats);
 router.get('/citas-grafica', authorize('admin'), citasGrafica);
 router.get('/top-estudios', authorize('admin'), topEstudios);
 

@@ -5,10 +5,11 @@ const { AppError } = require('../middleware/errorHandler');
 // @route   POST /api/auth/login
 exports.login = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        const { email, username, password } = req.body;
+        const loginEmail = email || username;
 
         // Buscar usuario con password
-        const user = await User.findOne({ email }).select('+password');
+        const user = await User.findOne({ email: loginEmail }).select('+password');
 
         if (!user) {
             return res.status(401).json({
@@ -41,19 +42,24 @@ exports.login = async (req, res, next) => {
         // Generar token
         const token = user.generateToken();
 
+        const userData = {
+            id: user._id,
+            nombre: user.nombre,
+            apellido: user.apellido,
+            email: user.email,
+            role: user.role,
+            rol: user.role,
+            nombreCompleto: user.nombreCompleto,
+            avatar: user.avatar
+        };
+
         res.json({
             success: true,
             message: 'Inicio de sesión exitoso',
             token,
-            user: {
-                id: user._id,
-                nombre: user.nombre,
-                apellido: user.apellido,
-                email: user.email,
-                role: user.role,
-                nombreCompleto: user.nombreCompleto,
-                avatar: user.avatar
-            }
+            access_token: token,
+            user: userData,
+            usuario: userData
         });
     } catch (error) {
         next(error);
